@@ -59,6 +59,30 @@ interface CompletionStat {
   days_this_month: number;
 }
 
+interface QuestionStats {
+  overall: {
+    questions_attempted: number;
+    total_attempts: number;
+    correct_answers: number;
+    avg_best_time: number;
+  };
+  recent: Array<{
+    question_key: string;
+    title: string;
+    book_title: string;
+    chapter_title: string;
+    is_correct: boolean;
+    time_taken_ms: number;
+    attempted_at: string;
+  }>;
+  byBook: Array<{
+    book_title: string;
+    questions_attempted: number;
+    total_attempts: number;
+    correct_answers: number;
+  }>;
+}
+
 const COLORS = ['#2196f3', '#ff9800', '#4caf50', '#9c27b0', '#f44336'];
 
 export default function ProgressPage() {
@@ -67,6 +91,7 @@ export default function ProgressPage() {
   const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
   const [neglectedActivities, setNeglectedActivities] = useState<NeglectedActivity[]>([]);
   const [completionStats, setCompletionStats] = useState<CompletionStat[]>([]);
+  const [questionStats, setQuestionStats] = useState<QuestionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllNeglected, setShowAllNeglected] = useState(false);
 
@@ -80,11 +105,18 @@ export default function ProgressPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/stats');
-      const data = await response.json();
-      setCategoryStats(data.categoryStats);
-      setNeglectedActivities(data.neglectedActivities);
-      setCompletionStats(data.completionStats);
+      const [activityResponse, questionResponse] = await Promise.all([
+        fetch('/api/stats'),
+        fetch('/api/questions/stats')
+      ]);
+
+      const activityData = await activityResponse.json();
+      const questionData = await questionResponse.json();
+
+      setCategoryStats(activityData.categoryStats);
+      setNeglectedActivities(activityData.neglectedActivities);
+      setCompletionStats(activityData.completionStats);
+      setQuestionStats(questionData);
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
@@ -119,13 +151,13 @@ export default function ProgressPage() {
   // Prepare data for charts
   const categoryChartData = categoryStats.map((stat) => ({
     category: stat.category,
-    'This Week': parseInt(stat.clicks_this_week),
-    'This Month': parseInt(stat.clicks_this_month),
+    'This Week': parseInt(String(stat.clicks_this_week)),
+    'This Month': parseInt(String(stat.clicks_this_month)),
   }));
 
   const categoryPieData = categoryStats.map((stat) => ({
     name: stat.category,
-    value: parseInt(stat.total_clicks),
+    value: parseInt(String(stat.total_clicks)),
   }));
 
   return (
@@ -276,6 +308,87 @@ export default function ProgressPage() {
               </>
             )}
           </Paper>
+
+          {/* Learning Progress - Question Stats */}
+          {questionStats && questionStats.overall.questions_attempted > 0 && (
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Learning Progress
+              </Typography>
+              <Grid container spacing={2} mb={3}>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Questions Attempted
+                  </Typography>
+                  <Typography variant="h5">
+                    {questionStats.overall.questions_attempted}
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Correct Answers
+                  </Typography>
+                  <Typography variant="h5" color="success.main">
+                    {questionStats.overall.correct_answers}
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Accuracy
+                  </Typography>
+                  <Typography variant="h5">
+                    {questionStats.overall.total_attempts > 0
+                      ? Math.round(
+                          (questionStats.overall.correct_answers /
+                            questionStats.overall.total_attempts) *
+                            100
+                        )
+                      : 0}
+                    %
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 6, md: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Avg. Best Time
+                  </Typography>
+                  <Typography variant="h5">
+                    {questionStats.overall.avg_best_time
+                      ? (questionStats.overall.avg_best_time / 1000).toFixed(1)
+                      : 0}
+                    s
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              {questionStats.byBook.length > 0 && (
+                <>
+                  <Typography variant="subtitle1" gutterBottom fontWeight={600}>
+                    Progress by Book
+                  </Typography>
+                  <List>
+                    {questionStats.byBook.map((book, index) => (
+                      <ListItem key={index}>
+                        <ListItemText
+                          primary={book.book_title}
+                          secondary={`${book.correct_answers}/${book.total_attempts} correct • ${book.questions_attempted} questions`}
+                        />
+                        <Chip
+                          label={`${Math.round(
+                            (book.correct_answers / book.total_attempts) * 100
+                          )}%`}
+                          color={
+                            (book.correct_answers / book.total_attempts) * 100 >= 70
+                              ? 'success'
+                              : 'default'
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </>
+              )}
+            </Paper>
+          )}
 
           {/* Most Active This Month */}
           <Paper sx={{ p: 3 }}>

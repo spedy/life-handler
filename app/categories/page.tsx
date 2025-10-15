@@ -185,7 +185,7 @@ export default function CategoriesPage() {
 
         <Grid container spacing={3}>
           {categories.map((category) => (
-            <Grid item xs={12} sm={6} md={4} key={category.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={category.id}>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" mb={2}>

@@ -212,3 +212,18 @@ npm start
 ## License
 
 ISC
+
+
+TODO:
+give me 5 best books titles on managing people
+give me 5 best book titleson  business tactics
+give me 5 best book titles on raising monez
+give me 5 best book titles on finances strategy and tactics
+give me 5 best book titles on online marketing
+give me 5 best book titles on communication with people and negotiation
+give me 5 best book titles on raising reschoolers
+give me 5 best book titles on raising junior school kids
+give me 5 best book titles on how to handle a large family along with house rules and house cleaning etc.
+give me 5 best book titles on logical puzzles
+give me 5 best book titles on encyclopedic stuff various things
+also the bible

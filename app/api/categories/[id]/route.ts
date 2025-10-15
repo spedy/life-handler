@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import pool from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -27,7 +28,7 @@ export async function PUT(
     // Get the old category name
     const oldCategoryResult = await pool.query(
       'SELECT name FROM categories WHERE id = $1 AND user_id = $2',
-      [params.id, userId]
+      [id, userId]
     );
 
     if (oldCategoryResult.rows.length === 0) {
@@ -39,7 +40,7 @@ export async function PUT(
     // Update category
     const result = await pool.query(
       'UPDATE categories SET name = $1, color = $2 WHERE id = $3 AND user_id = $4 RETURNING *',
-      [name.toLowerCase(), color, params.id, userId]
+      [name.toLowerCase(), color, id, userId]
     );
 
     // Update all activities with this category
@@ -66,8 +67,9 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -80,7 +82,7 @@ export async function DELETE(
     // Check if any activities use this category
     const activityCheck = await pool.query(
       'SELECT COUNT(*) FROM activities a JOIN categories c ON a.category = c.name WHERE c.id = $1 AND a.user_id = $2',
-      [params.id, userId]
+      [id, userId]
     );
 
     const activityCount = parseInt(activityCheck.rows[0].count);
@@ -94,7 +96,7 @@ export async function DELETE(
 
     const result = await pool.query(
       'DELETE FROM categories WHERE id = $1 AND user_id = $2 RETURNING *',
-      [params.id, userId]
+      [id, userId]
     );
 
     if (result.rows.length === 0) {

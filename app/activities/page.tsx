@@ -253,8 +253,8 @@ export default function ActivitiesPage() {
               }
             >
               {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
-                  {cat}
+                <MenuItem key={cat.id} value={cat.name}>
+                  {cat.name}
                 </MenuItem>
               ))}
             </TextField>

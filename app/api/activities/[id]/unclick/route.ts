@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import pool from '@/lib/db';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -19,7 +20,7 @@ export async function DELETE(
     // Verify the activity belongs to the user
     const activityCheck = await pool.query(
       'SELECT id FROM activities WHERE id = $1 AND user_id = $2',
-      [params.id, userId]
+      [id, userId]
     );
 
     if (activityCheck.rows.length === 0) {
@@ -36,7 +37,7 @@ export async function DELETE(
          ORDER BY clicked_at DESC
          LIMIT 1
        )`,
-      [params.id]
+      [id]
     );
 
     return NextResponse.json({ success: true });

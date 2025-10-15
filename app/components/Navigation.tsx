@@ -40,6 +40,7 @@ export default function Navigation() {
           sx={{ flexGrow: 1 }}
         >
           <Tab label="Daily" value="/daily" />
+          <Tab label="Feed" value="/feed" />
           <Tab label="Activities" value="/activities" />
           <Tab label="Categories" value="/categories" />
           <Tab label="Progress" value="/progress" />
